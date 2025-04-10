@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -7,10 +6,11 @@ import { Skeleton } from '@/components/ui/skeleton';
 import Navbar from '@/components/Navbar';
 import PortSelector from '@/components/PortSelector';
 import { api } from '@/lib/api';
-import { Port, DelayPrediction, CongestionPrediction } from '@/lib/types';
+import { getAIModels } from '@/lib/aiService';
+import { Port, DelayPrediction, CongestionPrediction, AIModelMetadata } from '@/lib/types';
 import { 
   Ship, Clock, CalendarDays, ArrowUpRight, ArrowDownRight, 
-  AlertTriangle, Map as MapIcon, RefreshCcw 
+  AlertTriangle, Map as MapIcon, RefreshCcw, Brain, Database 
 } from 'lucide-react';
 
 const Predictions = () => {
@@ -20,6 +20,8 @@ const Predictions = () => {
   const [congestionPredictions, setCongestionPredictions] = useState<Record<string, CongestionPrediction>>({});
   const [loading, setLoading] = useState(true);
   const [generatingAI, setGeneratingAI] = useState(false);
+  const [aiModels, setAiModels] = useState<AIModelMetadata[]>([]);
+  const [selectedModel, setSelectedModel] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchPorts = async () => {
@@ -28,7 +30,6 @@ const Predictions = () => {
         setPorts(portsData);
         
         if (portsData.length > 0) {
-          // Load predictions for all ports in parallel
           setLoading(true);
           
           const delayPromises = portsData.map(port => 
@@ -58,7 +59,6 @@ const Predictions = () => {
           setDelayPredictions(delayMap);
           setCongestionPredictions(congestionMap);
           
-          // Set initial port if none selected
           if (!selectedPortId && portsData.length > 0) {
             setSelectedPortId(portsData[0].id);
           }
@@ -72,6 +72,15 @@ const Predictions = () => {
 
     fetchPorts();
   }, [selectedPortId]);
+
+  useEffect(() => {
+    const models = getAIModels();
+    setAiModels(models);
+    
+    if (models.length > 0) {
+      setSelectedModel(models[0].name);
+    }
+  }, []);
 
   const handleRefreshPredictions = async () => {
     if (!selectedPortId) return;
@@ -102,8 +111,10 @@ const Predictions = () => {
   const handleGenerateAIPrediction = () => {
     setGeneratingAI(true);
     
-    // Simulate AI model processing time
     setTimeout(() => {
+      if (selectedPortId) {
+        handleRefreshPredictions();
+      }
       setGeneratingAI(false);
     }, 3000);
   };
@@ -135,8 +146,8 @@ const Predictions = () => {
       <main className="container mx-auto py-6 px-4">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
           <div>
-            <h1 className="text-2xl font-bold text-maritime-800">Predictive Analytics</h1>
-            <p className="text-gray-500">AI-powered predictions for port operations</p>
+            <h1 className="text-2xl font-bold text-maritime-800">AI-Powered Predictive Analytics</h1>
+            <p className="text-gray-500">Machine Learning models for accurate port operations forecasting</p>
           </div>
           
           <div className="mt-4 md:mt-0 flex items-center space-x-2">
@@ -172,6 +183,11 @@ const Predictions = () => {
                     <Clock className="h-5 w-5 mr-2 text-maritime-600" />
                     <span>Predicted Delay</span>
                   </CardTitle>
+                  {delayPredictions[selectedPortId]?.modelUsed && (
+                    <CardDescription>
+                      Model: {delayPredictions[selectedPortId]?.modelUsed}
+                    </CardDescription>
+                  )}
                 </CardHeader>
                 <CardContent>
                   {loading ? (
@@ -216,6 +232,11 @@ const Predictions = () => {
                     <Ship className="h-5 w-5 mr-2 text-maritime-600" />
                     <span>Congestion Forecast</span>
                   </CardTitle>
+                  {congestionPredictions[selectedPortId]?.modelUsed && (
+                    <CardDescription>
+                      Model: {congestionPredictions[selectedPortId]?.modelUsed}
+                    </CardDescription>
+                  )}
                 </CardHeader>
                 <CardContent>
                   {loading ? (
@@ -279,7 +300,10 @@ const Predictions = () => {
               <div className="lg:col-span-2">
                 <Card>
                   <CardHeader>
-                    <CardTitle>AI-Enhanced Prediction Model</CardTitle>
+                    <CardTitle className="flex items-center">
+                      <Brain className="h-5 w-5 mr-2 text-maritime-600" />
+                      AI-Enhanced Prediction Models
+                    </CardTitle>
                     <CardDescription>
                       Analyze weather patterns and historical data for improved forecasting
                     </CardDescription>
@@ -320,10 +344,30 @@ const Predictions = () => {
                       </div>
                       
                       <div className="p-4 border border-maritime-100 rounded-lg">
+                        <h3 className="font-medium mb-2 flex items-center">
+                          <Database className="h-4 w-4 mr-2 text-maritime-600" />
+                          <span>Available AI Models</span>
+                        </h3>
+                        
+                        <div className="space-y-2 mb-4">
+                          {aiModels.map((model) => (
+                            <div key={model.name} className="flex items-center p-2 border border-maritime-100 rounded-lg hover:bg-maritime-50">
+                              <div className="flex-1">
+                                <p className="font-medium text-sm">{model.name} v{model.version}</p>
+                                <p className="text-xs text-gray-500">{model.description}</p>
+                              </div>
+                              <div className="text-xs">
+                                <span className="px-2 py-1 bg-green-100 text-green-700 rounded-full">
+                                  {Math.round(model.accuracy * 100)}% accuracy
+                                </span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                        
                         <h3 className="font-medium mb-3">Generate Advanced AI Prediction</h3>
-                        <p className="text-sm text-gray-500 mb-4">
-                          Use our advanced AI model to generate detailed predictions based on real-time 
-                          weather data, historical patterns, and current port operations status.
+                        <p className="text-xs text-gray-500 mb-4">
+                          Uses multiple ML models including regression analysis, random forest classification, and time series forecasting to generate predictions based on historical patterns and current conditions.
                         </p>
                         
                         <Button 
@@ -340,10 +384,10 @@ const Predictions = () => {
                                 <span></span>
                                 <span></span>
                               </div>
-                              <span>Running AI Model...</span>
+                              <span>Running AI Models...</span>
                             </>
                           ) : (
-                            <span>Generate Advanced Prediction</span>
+                            <span>Generate Advanced AI Prediction</span>
                           )}
                         </Button>
                       </div>
@@ -406,9 +450,9 @@ const Predictions = () => {
             
             <Card>
               <CardHeader>
-                <CardTitle>Prediction Analysis Report</CardTitle>
+                <CardTitle>AI Prediction Analysis Report</CardTitle>
                 <CardDescription>
-                  Generated based on current data, historical patterns, and advanced ML models
+                  Generated using machine learning models trained on historical weather and shipping data
                 </CardDescription>
               </CardHeader>
               <CardContent>

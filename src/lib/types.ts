@@ -49,6 +49,7 @@ export interface DelayPrediction {
     impact: number;
   }[];
   timestamp: number;
+  modelUsed?: string;
 }
 
 export interface CongestionPrediction {
@@ -57,6 +58,7 @@ export interface CongestionPrediction {
   confidence: number;
   estimatedDuration: number;
   timestamp: number;
+  modelUsed?: string;
 }
 
 export interface Alert {
@@ -67,4 +69,27 @@ export interface Alert {
   message: string;
   startTime: number;
   endTime?: number;
+}
+
+export interface AIModelMetadata {
+  name: string;
+  version: string;
+  type: 'regression' | 'classification' | 'timeSeries' | 'ensemble';
+  description: string;
+  accuracy: number;
+  lastTrained: number;
+}
+
+export interface PredictionFeatures {
+  weatherFeatures: {
+    avgTemperature: number;
+    avgWindSpeed: number;
+    precipitationIntensity: number;
+    visibilityFactor: number;
+  };
+  portFeatures: {
+    currentVesselCount: number;
+    vesselCapacityRatio: number;
+    historicalDelayPattern: number;
+  };
 }

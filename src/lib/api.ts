@@ -1,4 +1,3 @@
-
 import { 
   Port, 
   WeatherData, 
@@ -9,6 +8,7 @@ import {
   HistoricalShipping,
   Alert
 } from './types';
+import { generateAIDelayPrediction, generateAICongestionPrediction } from './aiService';
 
 // Mock data for development
 // In production, these would be replaced with actual API calls
@@ -116,35 +116,6 @@ const generateShippingData = (portId: string): ShippingData => {
     avgWaitTime: Math.floor(Math.random() * 72) + 2, // 2 to 74 hours
     delayedVessels: Math.floor(Math.random() * 20), // 0 to 20 vessels
     congestionLevel: congestionLevels[Math.floor(Math.random() * congestionLevels.length)],
-    timestamp: Date.now()
-  };
-};
-
-// Function to generate random delay prediction
-const generateDelayPrediction = (portId: string): DelayPrediction => {
-  const factors = [
-    { factor: 'Weather Conditions', impact: Math.random() * 0.5 },
-    { factor: 'Port Capacity', impact: Math.random() * 0.3 },
-    { factor: 'Vessel Traffic', impact: Math.random() * 0.4 },
-    { factor: 'Labor Availability', impact: Math.random() * 0.2 }
-  ];
-  
-  return {
-    portId,
-    predictedDelay: Math.floor(Math.random() * 48) + 2, // 2 to 50 hours
-    confidenceLevel: Math.random() * 0.5 + 0.5, // 0.5 to 1.0 (50% to 100%)
-    impactingFactors: factors,
-    timestamp: Date.now()
-  };
-};
-
-// Function to generate random congestion prediction
-const generateCongestionPrediction = (portId: string): CongestionPrediction => {
-  return {
-    portId,
-    level: congestionLevels[Math.floor(Math.random() * congestionLevels.length)],
-    confidence: Math.random() * 0.3 + 0.7, // 0.7 to 1.0 (70% to 100%)
-    estimatedDuration: Math.floor(Math.random() * 72) + 24, // 24 to 96 hours
     timestamp: Date.now()
   };
 };
@@ -264,12 +235,38 @@ export const api = {
   
   getDelayPrediction: async (portId: string): Promise<DelayPrediction> => {
     await new Promise(resolve => setTimeout(resolve, 1500));
-    return generateDelayPrediction(portId);
+    
+    // Get required data for AI prediction
+    const currentWeather = await api.getCurrentWeather(portId);
+    const { weatherHistory, shippingHistory } = await api.getHistoricalData(portId, 30);
+    const currentShipping = await api.getCurrentShippingData(portId);
+    
+    // Use AI model to generate prediction
+    return generateAIDelayPrediction(
+      portId,
+      currentWeather,
+      weatherHistory,
+      currentShipping,
+      shippingHistory
+    );
   },
   
   getCongestionPrediction: async (portId: string): Promise<CongestionPrediction> => {
     await new Promise(resolve => setTimeout(resolve, 1300));
-    return generateCongestionPrediction(portId);
+    
+    // Get required data for AI prediction
+    const currentWeather = await api.getCurrentWeather(portId);
+    const { weatherHistory, shippingHistory } = await api.getHistoricalData(portId, 30);
+    const currentShipping = await api.getCurrentShippingData(portId);
+    
+    // Use AI model to generate prediction
+    return generateAICongestionPrediction(
+      portId,
+      currentWeather,
+      weatherHistory,
+      currentShipping,
+      shippingHistory
+    );
   },
   
   getAlerts: async (portId: string): Promise<Alert[]> => {

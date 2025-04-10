@@ -1,8 +1,8 @@
 
 import { useShippingData } from '@/hooks/useShippingData';
-import { Clock, AlertCircle, TrendingUp, BarChart, PieChart } from 'lucide-react';
+import { Clock, AlertCircle, TrendingUp, BarChart, PieChart, Brain } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 
 interface DelayPredictionProps {
@@ -47,6 +47,12 @@ const DelayPrediction = ({ portId }: DelayPredictionProps) => {
           <Clock className="mr-2 h-5 w-5 text-maritime-600" />
           <span>Delay Prediction</span>
         </CardTitle>
+        {delayPrediction?.modelUsed && (
+          <CardDescription className="flex items-center text-xs">
+            <Brain className="mr-1 h-3 w-3" />
+            AI Model: {delayPrediction.modelUsed}
+          </CardDescription>
+        )}
       </CardHeader>
       <CardContent>
         {loading ? (
