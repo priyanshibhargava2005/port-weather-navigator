@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { 
   Port, 
@@ -16,7 +15,10 @@ export const api = {
       .select('*');
       
     if (error) throw error;
-    return data;
+    return data.map(port => ({
+      ...port,
+      size: port.size as 'small' | 'medium' | 'large'
+    }));
   },
   
   getPortById: async (id: string): Promise<Port | undefined> => {
@@ -27,7 +29,10 @@ export const api = {
       .single();
       
     if (error) throw error;
-    return data;
+    return data ? {
+      ...data,
+      size: data.size as 'small' | 'medium' | 'large'
+    } : undefined;
   },
   
   getCurrentWeather: async (portId: string): Promise<WeatherData> => {
@@ -40,7 +45,18 @@ export const api = {
       .single();
       
     if (error) throw error;
-    return data;
+    return {
+      portId: data.port_id,
+      temperature: data.temperature,
+      humidity: data.humidity,
+      windSpeed: data.wind_speed,
+      windDirection: data.wind_direction,
+      precipitation: data.precipitation,
+      visibility: data.visibility,
+      weatherType: data.weather_type as WeatherData['weatherType'],
+      waveHeight: data.wave_height,
+      timestamp: new Date(data.timestamp).getTime()
+    };
   },
   
   getCurrentShippingData: async (portId: string): Promise<ShippingData> => {
@@ -53,7 +69,14 @@ export const api = {
       .single();
       
     if (error) throw error;
-    return data;
+    return {
+      portId: data.port_id,
+      vesselCount: data.vessel_count,
+      avgWaitTime: data.avg_wait_time,
+      delayedVessels: data.delayed_vessels,
+      congestionLevel: data.congestion_level as ShippingData['congestionLevel'],
+      timestamp: new Date(data.timestamp).getTime()
+    };
   },
   
   getHistoricalData: async (portId: string, days: number = 30) => {
@@ -94,7 +117,7 @@ export const api = {
   getDelayPrediction: async (portId: string): Promise<DelayPrediction> => {
     // Call our Edge Function for predictions
     const { data: predictions, error } = await supabase.functions.invoke('port-predictions', {
-      body: { portId }
+      body: { portId, action: 'predict-delay' }
     });
     
     if (error) throw error;
@@ -104,7 +127,7 @@ export const api = {
   getCongestionPrediction: async (portId: string): Promise<CongestionPrediction> => {
     // Call our Edge Function for predictions
     const { data: predictions, error } = await supabase.functions.invoke('port-predictions', {
-      body: { portId }
+      body: { portId, action: 'predict-congestion' }
     });
     
     if (error) throw error;
@@ -119,6 +142,14 @@ export const api = {
       .order('start_time', { ascending: false });
       
     if (error) throw error;
-    return data;
+    return data.map(alert => ({
+      id: alert.id,
+      portId: alert.port_id,
+      type: alert.type as Alert['type'],
+      severity: alert.severity as Alert['severity'],
+      message: alert.message,
+      startTime: new Date(alert.start_time).getTime(),
+      endTime: alert.end_time ? new Date(alert.end_time).getTime() : undefined
+    }));
   }
 };

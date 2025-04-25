@@ -1,4 +1,3 @@
-
 export interface Port {
   id: string;
   name: string;
@@ -10,6 +9,8 @@ export interface Port {
 }
 
 export interface WeatherData {
+  id?: string;
+  portId: string;
   temperature: number;
   humidity: number;
   windSpeed: number;
@@ -27,6 +28,7 @@ export interface HistoricalWeather {
 }
 
 export interface ShippingData {
+  id?: string;
   portId: string;
   vesselCount: number;
   avgWaitTime: number;

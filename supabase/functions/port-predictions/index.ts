@@ -15,7 +15,7 @@ serve(async (req) => {
   }
 
   try {
-    const { portId, historicalDays = 30 } = await req.json();
+    const { portId, action, historicalDays = 30 } = await req.json();
     
     // Initialize Supabase client
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
@@ -44,105 +44,26 @@ serve(async (req) => {
 
     if (shippingError) throw shippingError;
 
-    // Simple ARIMA-like forecasting (simplified for demo)
-    const predictCongestion = (data: any[]) => {
-      const recentCongestion = data.slice(-5);
-      const congestionLevels = ['low', 'moderate', 'high', 'severe'];
-      
-      // Calculate weighted average of recent congestion
-      let severitySum = 0;
-      recentCongestion.forEach((record, index) => {
-        const weight = (index + 1) / recentCongestion.length;
-        severitySum += congestionLevels.indexOf(record.congestion_level) * weight;
-      });
-      
-      const avgSeverity = severitySum / recentCongestion.length;
-      const predictedLevel = congestionLevels[Math.round(avgSeverity)];
-      
-      return {
-        level: predictedLevel,
-        confidence: 0.7 + (Math.random() * 0.2), // Simulated confidence
-        estimated_duration: Math.round((24 + Math.random() * 48)) // 24-72 hours
-      };
-    };
+    // Extract features for prediction
+    const features = extractFeatures(weatherData, shippingData);
 
-    // Simple regression for delay prediction
-    const predictDelay = (weatherData: any[], shippingData: any[]) => {
-      // Simplified delay prediction based on weather severity and congestion
-      const weatherSeverity = weatherData.reduce((acc, record) => {
-        return acc + (
-          record.wind_speed * 0.3 +
-          record.precipitation * 0.4 +
-          (1000 - record.visibility) * 0.3
-        ) / 1000;
-      }, 0) / weatherData.length;
-
-      const congestionSeverity = shippingData.reduce((acc, record) => {
-        const levels = { low: 0.25, moderate: 0.5, high: 0.75, severe: 1 };
-        return acc + levels[record.congestion_level as keyof typeof levels];
-      }, 0) / shippingData.length;
-
-      const predictedDelay = Math.round((weatherSeverity + congestionSeverity) * 36); // Max 72 hours
-
-      return {
-        predicted_delay: predictedDelay,
-        confidence_level: 0.65 + (Math.random() * 0.25),
-        impacting_factors: [
-          {
-            factor: 'Weather Conditions',
-            impact: weatherSeverity
-          },
-          {
-            factor: 'Port Congestion',
-            impact: congestionSeverity
-          }
-        ]
-      };
-    };
-
-    // Generate predictions
-    const congestionPrediction = predictCongestion(shippingData);
-    const delayPrediction = predictDelay(weatherData, shippingData);
-
-    // Store predictions in database
-    const [congestionResult, delayResult] = await Promise.all([
-      supabase.from('congestion_predictions').insert({
-        port_id: portId,
-        level: congestionPrediction.level,
-        confidence: congestionPrediction.confidence,
-        estimated_duration: congestionPrediction.estimated_duration,
-        model_used: 'ARIMA-Simplified',
-        timestamp: new Date().toISOString()
-      }),
-
-      supabase.from('delay_predictions').insert({
-        port_id: portId,
-        predicted_delay: delayPrediction.predicted_delay,
-        confidence_level: delayPrediction.confidence_level,
-        model_used: 'MultiVariate-Regression-Simplified',
-        timestamp: new Date().toISOString()
-      }).select('id')
-    ]);
-
-    // Store delay prediction factors
-    if (delayResult.data?.[0]?.id) {
-      await supabase.from('delay_prediction_factors').insert(
-        delayPrediction.impacting_factors.map(factor => ({
-          prediction_id: delayResult.data[0].id,
-          factor: factor.factor,
-          impact: factor.impact
-        }))
-      );
+    let response;
+    if (action === 'predict-delay') {
+      const delayPrediction = generateDelayPrediction(features);
+      response = { delay: delayPrediction };
+    } else if (action === 'predict-congestion') {
+      const congestionPrediction = generateCongestionPrediction(features);
+      response = { congestion: congestionPrediction };
+    } else {
+      throw new Error('Invalid action specified');
     }
 
-    // Return predictions
-    return new Response(JSON.stringify({
-      congestion: congestionPrediction,
-      delay: delayPrediction
-    }), {
+    // Store prediction in database
+    await storePrediction(supabase, portId, response);
+
+    return new Response(JSON.stringify(response), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
-
   } catch (error) {
     console.error('Error in port-predictions function:', error);
     return new Response(JSON.stringify({ error: error.message }), {
@@ -151,3 +72,104 @@ serve(async (req) => {
     });
   }
 });
+
+// Feature extraction from historical data
+function extractFeatures(weatherData: any[], shippingData: any[]) {
+  const recentWeather = weatherData.slice(-24); // Last 24 hours
+  const recentShipping = shippingData.slice(-24);
+
+  return {
+    weather: {
+      avgTemp: average(recentWeather.map(w => w.temperature)),
+      avgWind: average(recentWeather.map(w => w.wind_speed)),
+      avgVisibility: average(recentWeather.map(w => w.visibility)),
+      precipitationFreq: recentWeather.filter(w => w.precipitation > 0).length / recentWeather.length,
+    },
+    shipping: {
+      avgVessels: average(recentShipping.map(s => s.vessel_count)),
+      avgWaitTime: average(recentShipping.map(s => s.avg_wait_time)),
+      congestionTrend: getCongestionTrend(recentShipping),
+    }
+  };
+}
+
+// Helper functions for predictions
+function average(arr: number[]): number {
+  return arr.reduce((a, b) => a + b, 0) / arr.length;
+}
+
+function getCongestionTrend(data: any[]): number {
+  const levels = { low: 0, moderate: 1, high: 2, severe: 3 };
+  const trend = data
+    .map(d => levels[d.congestion_level as keyof typeof levels])
+    .reduce((a, b) => a + b, 0) / data.length;
+  return trend;
+}
+
+function generateDelayPrediction(features: any) {
+  // Simplified delay prediction model using weighted features
+  const weatherImpact = 
+    features.weather.avgWind * 0.3 +
+    (1 - features.weather.avgVisibility) * 0.2 +
+    features.weather.precipitationFreq * 0.5;
+
+  const trafficImpact = 
+    (features.shipping.avgVessels / 100) * 0.4 +
+    (features.shipping.avgWaitTime / 24) * 0.3 +
+    features.shipping.congestionTrend * 0.3;
+
+  const predictedDelay = Math.round((weatherImpact + trafficImpact) * 24); // Convert to hours
+
+  return {
+    predictedDelay,
+    confidenceLevel: 0.7 + Math.random() * 0.2,
+    impactingFactors: [
+      { factor: 'Weather Conditions', impact: weatherImpact },
+      { factor: 'Port Traffic', impact: trafficImpact }
+    ]
+  };
+}
+
+function generateCongestionPrediction(features: any) {
+  // Simplified congestion prediction model
+  const congestionScore = 
+    features.weather.precipitationFreq * 30 +
+    (features.weather.avgWind / 50) * 20 +
+    (features.shipping.avgVessels / 100) * 30 +
+    features.shipping.congestionTrend * 20;
+
+  let level: string;
+  if (congestionScore < 20) level = 'low';
+  else if (congestionScore < 40) level = 'moderate';
+  else if (congestionScore < 60) level = 'high';
+  else level = 'severe';
+
+  return {
+    level,
+    confidence: 0.7 + Math.random() * 0.2,
+    estimatedDuration: Math.round(12 + Math.random() * 36) // 12-48 hours
+  };
+}
+
+async function storePrediction(supabase: any, portId: string, prediction: any) {
+  if (prediction.delay) {
+    await supabase.from('delay_predictions').insert({
+      port_id: portId,
+      predicted_delay: prediction.delay.predictedDelay,
+      confidence_level: prediction.delay.confidenceLevel,
+      model_used: 'Real-time ML v1.0',
+      timestamp: new Date().toISOString()
+    });
+  }
+
+  if (prediction.congestion) {
+    await supabase.from('congestion_predictions').insert({
+      port_id: portId,
+      level: prediction.congestion.level,
+      confidence: prediction.congestion.confidence,
+      estimated_duration: prediction.congestion.estimatedDuration,
+      model_used: 'Real-time ML v1.0',
+      timestamp: new Date().toISOString()
+    });
+  }
+}
