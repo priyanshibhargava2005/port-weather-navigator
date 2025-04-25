@@ -9,7 +9,318 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      ai_models: {
+        Row: {
+          accuracy: number
+          created_at: string | null
+          description: string | null
+          id: string
+          last_trained: string
+          name: string
+          type: string | null
+          version: string
+        }
+        Insert: {
+          accuracy: number
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          last_trained: string
+          name: string
+          type?: string | null
+          version: string
+        }
+        Update: {
+          accuracy?: number
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          last_trained?: string
+          name?: string
+          type?: string | null
+          version?: string
+        }
+        Relationships: []
+      }
+      alerts: {
+        Row: {
+          created_at: string | null
+          end_time: string | null
+          id: string
+          message: string
+          port_id: string
+          severity: string | null
+          start_time: string
+          type: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          end_time?: string | null
+          id?: string
+          message: string
+          port_id: string
+          severity?: string | null
+          start_time: string
+          type?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          end_time?: string | null
+          id?: string
+          message?: string
+          port_id?: string
+          severity?: string | null
+          start_time?: string
+          type?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "alerts_port_id_fkey"
+            columns: ["port_id"]
+            isOneToOne: false
+            referencedRelation: "ports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      congestion_predictions: {
+        Row: {
+          confidence: number
+          created_at: string | null
+          estimated_duration: number
+          id: string
+          level: string | null
+          model_used: string
+          port_id: string
+          timestamp: string
+        }
+        Insert: {
+          confidence: number
+          created_at?: string | null
+          estimated_duration: number
+          id?: string
+          level?: string | null
+          model_used: string
+          port_id: string
+          timestamp?: string
+        }
+        Update: {
+          confidence?: number
+          created_at?: string | null
+          estimated_duration?: number
+          id?: string
+          level?: string | null
+          model_used?: string
+          port_id?: string
+          timestamp?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "congestion_predictions_port_id_fkey"
+            columns: ["port_id"]
+            isOneToOne: false
+            referencedRelation: "ports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      delay_prediction_factors: {
+        Row: {
+          created_at: string | null
+          factor: string
+          id: string
+          impact: number
+          prediction_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          factor: string
+          id?: string
+          impact: number
+          prediction_id: string
+        }
+        Update: {
+          created_at?: string | null
+          factor?: string
+          id?: string
+          impact?: number
+          prediction_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "delay_prediction_factors_prediction_id_fkey"
+            columns: ["prediction_id"]
+            isOneToOne: false
+            referencedRelation: "delay_predictions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      delay_predictions: {
+        Row: {
+          confidence_level: number
+          created_at: string | null
+          id: string
+          model_used: string
+          port_id: string
+          predicted_delay: number
+          timestamp: string
+        }
+        Insert: {
+          confidence_level: number
+          created_at?: string | null
+          id?: string
+          model_used: string
+          port_id: string
+          predicted_delay: number
+          timestamp?: string
+        }
+        Update: {
+          confidence_level?: number
+          created_at?: string | null
+          id?: string
+          model_used?: string
+          port_id?: string
+          predicted_delay?: number
+          timestamp?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "delay_predictions_port_id_fkey"
+            columns: ["port_id"]
+            isOneToOne: false
+            referencedRelation: "ports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ports: {
+        Row: {
+          code: string
+          country: string
+          created_at: string | null
+          id: string
+          latitude: number
+          longitude: number
+          name: string
+          size: string | null
+        }
+        Insert: {
+          code: string
+          country: string
+          created_at?: string | null
+          id?: string
+          latitude: number
+          longitude: number
+          name: string
+          size?: string | null
+        }
+        Update: {
+          code?: string
+          country?: string
+          created_at?: string | null
+          id?: string
+          latitude?: number
+          longitude?: number
+          name?: string
+          size?: string | null
+        }
+        Relationships: []
+      }
+      shipping_data: {
+        Row: {
+          avg_wait_time: number
+          congestion_level: string | null
+          created_at: string | null
+          delayed_vessels: number
+          id: string
+          port_id: string
+          timestamp: string
+          vessel_count: number
+        }
+        Insert: {
+          avg_wait_time: number
+          congestion_level?: string | null
+          created_at?: string | null
+          delayed_vessels: number
+          id?: string
+          port_id: string
+          timestamp?: string
+          vessel_count: number
+        }
+        Update: {
+          avg_wait_time?: number
+          congestion_level?: string | null
+          created_at?: string | null
+          delayed_vessels?: number
+          id?: string
+          port_id?: string
+          timestamp?: string
+          vessel_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shipping_data_port_id_fkey"
+            columns: ["port_id"]
+            isOneToOne: false
+            referencedRelation: "ports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      weather_data: {
+        Row: {
+          created_at: string | null
+          humidity: number
+          id: string
+          port_id: string
+          precipitation: number
+          temperature: number
+          timestamp: string
+          visibility: number
+          wave_height: number | null
+          weather_type: string | null
+          wind_direction: number
+          wind_speed: number
+        }
+        Insert: {
+          created_at?: string | null
+          humidity: number
+          id?: string
+          port_id: string
+          precipitation: number
+          temperature: number
+          timestamp?: string
+          visibility: number
+          wave_height?: number | null
+          weather_type?: string | null
+          wind_direction: number
+          wind_speed: number
+        }
+        Update: {
+          created_at?: string | null
+          humidity?: number
+          id?: string
+          port_id?: string
+          precipitation?: number
+          temperature?: number
+          timestamp?: string
+          visibility?: number
+          wave_height?: number | null
+          weather_type?: string | null
+          wind_direction?: number
+          wind_speed?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "weather_data_port_id_fkey"
+            columns: ["port_id"]
+            isOneToOne: false
+            referencedRelation: "ports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
