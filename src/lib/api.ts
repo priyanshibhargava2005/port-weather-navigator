@@ -105,11 +105,29 @@ export const api = {
     return {
       weatherHistory: weatherData.data.map(wd => ({
         date: new Date(wd.timestamp).toISOString().split('T')[0],
-        weatherData: wd
+        weatherData: {
+          portId: wd.port_id,
+          temperature: wd.temperature,
+          humidity: wd.humidity,
+          windSpeed: wd.wind_speed,
+          windDirection: wd.wind_direction,
+          precipitation: wd.precipitation,
+          visibility: wd.visibility,
+          weatherType: wd.weather_type as WeatherData['weatherType'],
+          waveHeight: wd.wave_height,
+          timestamp: new Date(wd.timestamp).getTime()
+        }
       })),
       shippingHistory: shippingData.data.map(sd => ({
         date: new Date(sd.timestamp).toISOString().split('T')[0],
-        shippingData: sd
+        shippingData: {
+          portId: sd.port_id,
+          vesselCount: sd.vessel_count,
+          avgWaitTime: sd.avg_wait_time,
+          delayedVessels: sd.delayed_vessels,
+          congestionLevel: sd.congestion_level as ShippingData['congestionLevel'],
+          timestamp: new Date(sd.timestamp).getTime()
+        }
       }))
     };
   },
@@ -151,5 +169,17 @@ export const api = {
       startTime: new Date(alert.start_time).getTime(),
       endTime: alert.end_time ? new Date(alert.end_time).getTime() : undefined
     }));
+  },
+  
+  generateSampleData: async () => {
+    // Generate sample ports
+    await supabase.functions.invoke('port-data', {
+      body: { action: 'generate-ports' }
+    });
+
+    // Update weather data
+    await supabase.functions.invoke('port-data', {
+      body: { action: 'update-weather' }
+    });
   }
 };
