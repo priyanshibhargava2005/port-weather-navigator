@@ -1,9 +1,0 @@
-
-project_id = "oqcywblayontdqguynwj"
-
-[api]
-enabled = true
-url = "https://oqcywblayontdqguynwj.supabase.co"
-
-[functions.port-data]
-verify_jwt = false
