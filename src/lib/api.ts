@@ -123,7 +123,7 @@ const convertToHourlyForecast = (weather: WeatherData): any => {
 // Generate a 48-hour forecast based on current weather
 const generateHourlyForecast = (
   currentWeather: WeatherData,
-  hours: number = 48
+  hours: number = 60
 ): any[] => {
   const hourlyForecast = [];
   const baseTime = new Date(currentWeather.timestamp);
@@ -138,6 +138,7 @@ const generateHourlyForecast = (
       visibility_nm: currentWeather.visibility / 1000, // Convert meters to nautical miles
       wave_height_m: currentWeather.waveHeight || 1.0,
       state: weatherStateMap[currentWeather.weatherType] || "Clear",
+      precipitation_mmhr: currentWeather.precipitation,
     });
   }
 
@@ -279,7 +280,7 @@ export const api = {
       windSpeed: 10 + (port?.latitude ? Math.abs(port.latitude) / 10 : 0),
       windDirection:
         (port?.longitude ? Math.abs(port.longitude) * 2 : 180) % 360,
-      precipitation: port?.name.includes("S") ? 20 : 0, // Just a silly example
+      precipitation: port?.name.includes("S") ? 5 : 0, // Just a silly example
       visibility: 8000,
       weatherType: "clear",
       waveHeight: 1.2,
