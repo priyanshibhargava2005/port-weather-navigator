@@ -185,7 +185,6 @@ export const api = {
           !model.toLowerCase().includes("arima") &&
           !model.toLowerCase().includes("series")
       );
-      console.log("Available models:", filteredModels);
       return filteredModels.length > 0 ? filteredModels : ["Default Model"];
     } catch (error) {
       console.error("Error fetching available models:", error);
