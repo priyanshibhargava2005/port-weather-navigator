@@ -182,11 +182,10 @@ const CongestionAnalytics = ({ portId }: CongestionAnalyticsProps) => {
                     Current Congestion
                   </p>
                   <p
-                    className={`font-bold capitalize ${
-                      currentShipping
+                      className={`font-bold capitalize ${currentShipping
                         ? getCongestionColor(currentShipping.congestionLevel)
                         : "text-gray-400"
-                    }`}
+                        }`}
                   >
                     {currentShipping?.congestionLevel || "Unknown"}
                   </p>
@@ -211,7 +210,7 @@ const CongestionAnalytics = ({ portId }: CongestionAnalyticsProps) => {
                   {congestionPrediction &&
                     currentShipping &&
                     (congestionPrediction.level ===
-                    currentShipping.congestionLevel ? (
+                      currentShipping.congestionLevel ? (
                       <span className="text-gray-500 text-sm flex items-center">
                         Stable
                       </span>
@@ -243,11 +242,10 @@ const CongestionAnalytics = ({ portId }: CongestionAnalyticsProps) => {
                       ? getCongestionProgress(congestionPrediction.level)
                       : 0
                   }
-                  className={`h-2 ${
-                    congestionPrediction
+                    className={`h-2 ${congestionPrediction
                       ? getProgressClass(congestionPrediction.level)
                       : "bg-gray-300"
-                  }`}
+                    }`}
                 />
               </div>
 
@@ -264,15 +262,7 @@ const CongestionAnalytics = ({ portId }: CongestionAnalyticsProps) => {
                     {currentShipping?.avgWaitTime || "--"} hours
                   </span>
                 </div>
-                <div className="flex justify-between mt-1">
-                  <span className="text-sm font-medium">Confidence</span>
-                  <span className="font-bold">
-                    {congestionPrediction
-                      ? Math.round(congestionPrediction.confidence * 100)
-                      : "--"}
-                    %
-                  </span>
-                </div>
+
               </div>
 
               <div className="mt-2 flex justify-between items-center">
@@ -282,27 +272,24 @@ const CongestionAnalytics = ({ portId }: CongestionAnalyticsProps) => {
                 </span>
                 {congestionPrediction && currentShipping && (
                   <span
-                    className={`text-xs font-medium ${
-                      getCongestionSeverity(congestionPrediction.level) >
-                      getCongestionSeverity(currentShipping.congestionLevel)
+                      className={`text-xs font-medium ${getCongestionSeverity(congestionPrediction.level) >
+                        getCongestionSeverity(currentShipping.congestionLevel)
                         ? "text-red-500"
                         : "text-green-500"
-                    }`}
+                        }`}
                   >
                     {getCongestionSeverity(congestionPrediction.level) >
-                    getCongestionSeverity(currentShipping.congestionLevel)
-                      ? `+${
-                          getCongestionSeverity(congestionPrediction.level) -
-                          getCongestionSeverity(currentShipping.congestionLevel)
+                        getCongestionSeverity(currentShipping.congestionLevel)
+                        ? `+${getCongestionSeverity(congestionPrediction.level) -
+                        getCongestionSeverity(currentShipping.congestionLevel)
                         } severity`
                       : getCongestionSeverity(congestionPrediction.level) <
                         getCongestionSeverity(currentShipping.congestionLevel)
-                      ? `-${
-                          getCongestionSeverity(
+                          ? `-${getCongestionSeverity(
                             currentShipping.congestionLevel
                           ) - getCongestionSeverity(congestionPrediction.level)
                         } severity`
-                      : "No change expected"}
+                          : "No change expected"}
                   </span>
                 )}
               </div>
