@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
@@ -79,7 +78,7 @@ const Index = () => {
                 </div>
                 <h3 className="font-bold mb-2">Predictive Forecasting</h3>
                 <p className="text-gray-500 text-sm mb-4">
-                  Use AI to predict future delays and optimize shipping schedules
+                  Use AI and ARIMA time series modeling to predict future delays and optimize shipping schedules
                 </p>
                 <Button variant="outline" className="mt-auto">
                   <span>View Predictions</span>

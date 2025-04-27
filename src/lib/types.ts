@@ -1,4 +1,3 @@
-
 export interface Port {
   id: string;
   name: string;
@@ -59,6 +58,19 @@ export interface CongestionPrediction {
   estimatedDuration: number;
   timestamp: number;
   modelUsed?: string;
+}
+
+export interface TimeSeriesForecast {
+  portId: string;
+  forecastDates: string[];
+  forecastValues: number[];
+  confidenceIntervals?: {
+    lowerBound: number[];
+    upperBound: number[];
+    confidenceLevel: number;
+  };
+  modelUsed: string;
+  timestamp: number;
 }
 
 export interface Alert {
