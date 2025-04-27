@@ -135,7 +135,9 @@ const DelayPrediction = ({ portId }: DelayPredictionProps) => {
             <div className="flex justify-between items-center mb-2">
               <div>
                 <h3 className="text-2xl font-bold">
-                  {delayPrediction?.predictedDelay || "--"}{" "}
+                    {delayPrediction?.predictedDelay
+                      ? delayPrediction.predictedDelay.toFixed(2)
+                      : "--"}{" "}
                   <span className="text-sm font-normal text-gray-500">
                     hours
                   </span>
@@ -148,28 +150,6 @@ const DelayPrediction = ({ portId }: DelayPredictionProps) => {
               <div className="bg-maritime-50 p-2 rounded-full">
                 <AlertCircle className={`h-8 w-8 ${delayLevel.color}`} />
               </div>
-            </div>
-
-            <div className="mt-4">
-              <div className="flex justify-between text-sm mb-1">
-                <span>Prediction Confidence</span>
-                <span className="font-medium">
-                  {delayPrediction
-                    ? Math.round(delayPrediction.confidenceLevel * 100)
-                    : "--"}
-                  %
-                </span>
-              </div>
-              <Progress
-                value={
-                  delayPrediction ? delayPrediction.confidenceLevel * 100 : 0
-                }
-                className={`h-2 ${
-                  delayPrediction
-                    ? getConfidenceColor(delayPrediction.confidenceLevel)
-                    : "bg-gray-300"
-                }`}
-              />
             </div>
 
             <div className="mt-4">
