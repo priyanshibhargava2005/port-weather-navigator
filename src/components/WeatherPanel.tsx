@@ -1,4 +1,3 @@
-
 import { useWeatherData } from '@/hooks/useWeatherData';
 import { Sun, Cloud, CloudRain, CloudLightning, CloudFog, Snowflake, Wind, Thermometer, Droplets, Eye } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -81,7 +80,7 @@ const WeatherPanel = ({ portId }: WeatherPanelProps) => {
                 </div>
               </div>
               <div className="text-3xl font-bold text-maritime-800">
-                {currentWeather?.temperature || '--'}°C
+                  {currentWeather?.temperature ? currentWeather.temperature.toFixed(0) : '--'}°C
               </div>
             </div>
 
@@ -91,7 +90,7 @@ const WeatherPanel = ({ portId }: WeatherPanelProps) => {
                 <div>
                   <p className="text-xs text-gray-500">Wind</p>
                   <p className="font-medium">
-                    {currentWeather?.windSpeed || '--'} km/h
+                      {currentWeather?.windSpeed ? currentWeather.windSpeed.toFixed(1) : '--'} km/h
                   </p>
                 </div>
               </div>
@@ -101,7 +100,7 @@ const WeatherPanel = ({ portId }: WeatherPanelProps) => {
                 <div>
                   <p className="text-xs text-gray-500">Humidity</p>
                   <p className="font-medium">
-                    {currentWeather?.humidity || '--'}%
+                      {currentWeather?.humidity ? Math.round(currentWeather.humidity) : '--'}%
                   </p>
                 </div>
               </div>
@@ -111,7 +110,7 @@ const WeatherPanel = ({ portId }: WeatherPanelProps) => {
                 <div>
                   <p className="text-xs text-gray-500">Visibility</p>
                   <p className="font-medium">
-                    {currentWeather?.visibility ? (currentWeather.visibility / 1000).toFixed(1) : '--'} km
+                      {currentWeather?.visibility ? (currentWeather.visibility / 1000).toFixed(2) : '--'} km
                   </p>
                 </div>
               </div>
@@ -120,9 +119,9 @@ const WeatherPanel = ({ portId }: WeatherPanelProps) => {
                 <CloudRain className="h-5 w-5 text-blue-400 mr-2" />
                 <div>
                   <p className="text-xs text-gray-500">Precipitation</p>
-                  <p className="font-medium">
-                    {currentWeather?.precipitation || '--'} mm
-                  </p>
+                    <p className="font-medium">
+                      {currentWeather?.precipitation !== undefined ? Math.round(currentWeather.precipitation) : '--'} mm
+                    </p>
                 </div>
               </div>
             </div>
@@ -147,7 +146,7 @@ const WeatherPanel = ({ portId }: WeatherPanelProps) => {
                   <div>
                     <p className="text-xs text-gray-500">Wave Height</p>
                     <p className="font-medium">
-                      {currentWeather.waveHeight.toFixed(1)} m
+                        {currentWeather.waveHeight.toFixed(2)} m
                     </p>
                   </div>
                 </div>

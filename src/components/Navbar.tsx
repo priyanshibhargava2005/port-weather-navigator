@@ -10,7 +10,7 @@ const Navbar = () => {
 
   const navLinks = [
     { name: 'Dashboard', path: '/', icon: <Compass className="w-5 h-5 mr-2" /> },
-    { name: 'Analytics', path: '/analytics', icon: <BarChart3 className="w-5 h-5 mr-2" /> },
+    // { name: 'Analytics', path: '/analytics', icon: <BarChart3 className="w-5 h-5 mr-2" /> },
     { name: 'Predictions', path: '/predictions', icon: <Ship className="w-5 h-5 mr-2" /> },
   ];
 
@@ -45,15 +45,6 @@ const Navbar = () => {
                 {link.name}
               </Link>
             ))}
-          </div>
-
-          {/* Alerts Button */}
-          <div className="hidden md:flex md:items-center ml-4">
-            <Button variant="outline" size="sm" className="flex items-center text-sm">
-              <AlertCircle className="w-4 h-4 mr-1" />
-              <span>Alerts</span>
-              <span className="ml-1 bg-red-500 text-white rounded-full text-xs px-1.5">3</span>
-            </Button>
           </div>
 
           {/* Mobile menu button */}
