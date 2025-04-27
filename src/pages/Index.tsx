@@ -46,9 +46,9 @@ const Index = () => {
           </div>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <div className="mb-6">
           <DelayPrediction portId={selectedPortId} />
-          <CongestionAnalytics portId={selectedPortId} />
+          {/* <CongestionAnalytics portId={selectedPortId} /> */}
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
