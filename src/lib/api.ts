@@ -109,42 +109,6 @@ const defaultShippingData = (portId: string): ShippingData => ({
   timestamp: Date.now(),
 });
 
-// Convert our weather data to the format expected by the backend
-const convertToHourlyForecast = (weather: WeatherData): any => {
-  return {
-    timestamp: new Date(weather.timestamp).toISOString(),
-    wind_speed_knots: weather.windSpeed,
-    visibility_nm: weather.visibility / 1000, // Convert meters to nautical miles
-    wave_height_m: weather.waveHeight || 1.0,
-    state: weatherStateMap[weather.weatherType] || "Clear",
-  };
-};
-
-// Generate a 48-hour forecast based on current weather
-const generateHourlyForecast = (
-  currentWeather: WeatherData,
-  hours: number = 60
-): any[] => {
-  const hourlyForecast = [];
-  const baseTime = new Date(currentWeather.timestamp);
-
-  for (let i = 0; i < hours; i++) {
-    const forecastTime = new Date(baseTime);
-    forecastTime.setHours(forecastTime.getHours() + i);
-
-    hourlyForecast.push({
-      timestamp: forecastTime.toISOString(),
-      wind_speed_knots: currentWeather.windSpeed,
-      visibility_nm: currentWeather.visibility / 1000, // Convert meters to nautical miles
-      wave_height_m: currentWeather.waveHeight || 1.0,
-      state: weatherStateMap[currentWeather.weatherType] || "Clear",
-      precipitation_mmhr: currentWeather.precipitation,
-    });
-  }
-
-  return hourlyForecast;
-};
-
 // Map vessel types based on port size
 const getVesselType = (portSize: string): string => {
   switch (portSize) {
@@ -269,25 +233,62 @@ export const api = {
     return ports.find((port) => port.id === id);
   },
 
-  // Get current weather (using real weather API would be better but for now using simplified data)
-  getCurrentWeather: async (portId: string): Promise<WeatherData> => {
-    const port = await api.getPortById(portId);
+  getWeatherData: async (portId: string): Promise<WeatherData> => {
+      const port = await api.getPortById(portId);
+      if (!port) {
+        throw new Error(`Port with ID ${portId} not found`);
+      }
 
-    // Generate very simple weather based on port location
-    const weatherData: WeatherData = {
-      temperature: 20 + (port?.latitude ? Math.abs(port.latitude) / 5 : 0),
-      humidity: 60 + (port?.longitude ? Math.abs(port.longitude) % 30 : 0),
-      windSpeed: 10 + (port?.latitude ? Math.abs(port.latitude) / 10 : 0),
-      windDirection:
-        (port?.longitude ? Math.abs(port.longitude) * 2 : 180) % 360,
-      precipitation: port?.name.includes("S") ? 5 : 0, // Just a silly example
-      visibility: 8000,
-      weatherType: "clear",
-      waveHeight: 1.2,
-      timestamp: Date.now(),
-    };
+      // Get weather from the /weather endpoint
+      const response = await fetch(`${API_URL}/weather?lat=${port.latitude}&lon=${port.longitude}&forecast=false`);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch weather data: ${response.statusText}`);
+      }
+      const weatherData = await response.json();
+      
+      if (weatherData.current) {
+        return {
+          temperature: weatherData.current.temperature,
+          humidity: weatherData.current.humidity,
+          windSpeed: weatherData.current.wind_speed,
+          windDirection: weatherData.current.wind_direction,
+          precipitation: weatherData.current.precipitation,
+          visibility: weatherData.current.visibility,
+          weatherType: weatherData.current.weather_simple,
+          waveHeight: weatherData.current.wave_height,
+          timestamp: new Date(weatherData.current.timestamp).toISOString(),
+        };
+      } else {
+        throw new Error('Weather data response is missing current weather information');
+      }
+  },
 
-    return weatherData;
+  getWeatherForecast: async (portId: string): Promise<any[]> => {
+      const port = await api.getPortById(portId);
+      if (!port) {
+        throw new Error(`Port with ID ${portId} not found`);
+      }
+
+      // Get forecast from the /weather endpoint with forecast=true
+      const response = await fetch(`${API_URL}/weather?lat=${port.latitude}&lon=${port.longitude}&forecast=true`);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch forecast weather: ${response.statusText}`);
+      }
+      const forecastData = await response.json();
+      
+      if (forecastData.forecast && forecastData.forecast.length > 0) {
+        // Convert the forecast data to the format expected by the backend
+        return forecastData.forecast.map((item: any) => ({
+          timestamp: new Date(item.timestamp).toISOString(),
+          wind_speed_knots: item.wind_speed,
+          visibility_nm: item.visibility / 1000, // Convert meters to nautical miles
+          wave_height_m: item.wave_height || 0,
+          precipitation_mmhr: item.precipitation || 0,
+          state: weatherStateMap[item.weather_simple] || "Clear",
+        }));
+      } else {
+        throw new Error('Weather forecast data is missing or empty');
+      }
   },
 
   getCurrentShippingData: async (portId: string): Promise<ShippingData> => {
@@ -321,7 +322,7 @@ export const api = {
         visibility: 8000 - (i % 5 === 0 ? 4000 : 0), // Reduced visibility every 5 days
         weatherType: i % 7 === 0 ? "rainy" : i % 5 === 0 ? "foggy" : "clear",
         waveHeight: 1.0 + Math.sin((i / 8) * Math.PI) * 0.5,
-        timestamp: date.getTime(),
+        timestamp: date.toISOString(),
       };
 
       weatherHistory.push({
@@ -362,29 +363,27 @@ export const api = {
         throw new Error(`Port with ID ${portId} not found`);
       }
 
-      // 2. Get current weather
-      const currentWeather = await api.getCurrentWeather(portId);
-
-      // 3. Generate a 48-hour forecast
-      const hourlyForecast = generateHourlyForecast(currentWeather);
-
-      // 4. Get available models if a specific one wasn't provided
+      // 2. Get available models if a specific one wasn't provided
       let selectedModel = modelName;
       if (!selectedModel) {
         const availableModels = await api.getAvailableModels();
         selectedModel = availableModels[0] || "Default Model";
       }
 
-      // 5. Prepare request data for the Flask backend
+      // 3. Get weather data - use getWeatherData for all models
+      const hourlyForecast = await api.getWeatherForecast(portId);
+      const arrivalTimestamp = (new Date).toISOString();
+
+      // 4. Prepare request data for the Flask backend
       const requestData = {
         vessel_type: getVesselType(port.size),
         teu: getTEU(port.size),
-        arrival_timestamp_str: new Date().toISOString(),
+        arrival_timestamp_str: arrivalTimestamp,
         hourly_weather_forecast: hourlyForecast,
         model_name: selectedModel,
       };
 
-      // 6. Call the Flask API
+      // 5. Call the Flask API
       const response = await fetch(`${API_URL}/predict`, {
         method: "POST",
         headers: {
@@ -397,14 +396,13 @@ export const api = {
         throw new Error(`Prediction API error: ${response.statusText}`);
       }
 
-      // 7. Parse the response
+      // 6. Parse the response
       const predictionData = await response.json();
 
-      // 8. Map to our DelayPrediction type
+      // 7. Map to our DelayPrediction type
       return {
         portId,
         predictedDelay: predictionData.predicted_total_weather_delay_hrs,
-        confidenceLevel: 0.85, // API doesn't provide this, so using a default
         impactingFactors: [
           {
             factor: "Weather Conditions",
@@ -429,7 +427,6 @@ export const api = {
       return {
         portId,
         predictedDelay: 0,
-        confidenceLevel: 0,
         impactingFactors: [],
         timestamp: Date.now(),
         modelUsed: "Error - Failed to get prediction",

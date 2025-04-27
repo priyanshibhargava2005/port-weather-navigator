@@ -458,20 +458,7 @@ const Predictions = () => {
                                         ?.estimatedDuration || "--"}{" "}
                                       hours
                                     </span>
-                                  </div>
-                                  <div className="flex justify-between items-center mt-1">
-                                    <span className="text-sm">Confidence</span>
-                                    <span className="font-medium">
-                                      {congestionPredictions[selectedPortId]
-                                        ? Math.round(
-                                            congestionPredictions[
-                                              selectedPortId
-                                            ].confidence * 100
-                                          )
-                                        : "--"}
-                                      %
-                                    </span>
-                                  </div>
+                                      </div>
                                 </div>
 
                                 <div className="mt-6">

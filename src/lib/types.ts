@@ -17,7 +17,7 @@ export interface WeatherData {
   visibility: number;
   weatherType: 'clear' | 'cloudy' | 'rainy' | 'stormy' | 'foggy' | 'snowy';
   waveHeight?: number;
-  timestamp: number;
+  timestamp: string;
 }
 
 export interface HistoricalWeather {
@@ -42,7 +42,6 @@ export interface HistoricalShipping {
 export interface DelayPrediction {
   portId: string;
   predictedDelay: number;
-  confidenceLevel: number;
   impactingFactors: {
     factor: string;
     impact: number;

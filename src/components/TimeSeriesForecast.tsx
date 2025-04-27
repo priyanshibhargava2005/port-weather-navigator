@@ -193,9 +193,9 @@ const TimeSeriesForecast = ({ portId }: TimeSeriesForecastProps) => {
               </h4>
               <ul className="mt-2 text-sm space-y-1">
                 <li>• Average predicted delay: {chartData && chartData.length > 0 ? 
-                  (chartData.reduce((sum, item) => sum + item.forecast, 0) / chartData.length).toFixed(1) : '0'} hours</li>
+                  (chartData.reduce((sum, item) => sum + item.forecast, 0) / chartData.length).toFixed(2) : '0'} hours</li>
                 <li>• Peak delay: {chartData && chartData.length > 0 ? 
-                  Math.max(...chartData.map(item => item.forecast)).toFixed(1) : '0'} hours</li>
+                  Math.max(...chartData.map(item => item.forecast)).toFixed(2) : '0'} hours</li>
                 <li>• Projected trend: {chartData && chartData.length > 2 && 
                   chartData[chartData.length - 1].forecast > chartData[0].forecast ? 
                   'Increasing delays expected' : 'Improving conditions expected'}</li>
