@@ -1,4 +1,3 @@
-
 export interface Port {
   id: string;
   name: string;
@@ -18,7 +17,7 @@ export interface WeatherData {
   visibility: number;
   weatherType: 'clear' | 'cloudy' | 'rainy' | 'stormy' | 'foggy' | 'snowy';
   waveHeight?: number;
-  timestamp: number;
+  timestamp: string;
 }
 
 export interface HistoricalWeather {
@@ -43,7 +42,6 @@ export interface HistoricalShipping {
 export interface DelayPrediction {
   portId: string;
   predictedDelay: number;
-  confidenceLevel: number;
   impactingFactors: {
     factor: string;
     impact: number;
@@ -59,6 +57,19 @@ export interface CongestionPrediction {
   estimatedDuration: number;
   timestamp: number;
   modelUsed?: string;
+}
+
+export interface TimeSeriesForecast {
+  portId: string;
+  forecastDates: string[];
+  forecastValues: number[];
+  confidenceIntervals?: {
+    lowerBound: number[];
+    upperBound: number[];
+    confidenceLevel: number;
+  };
+  modelUsed: string;
+  timestamp: number;
 }
 
 export interface Alert {

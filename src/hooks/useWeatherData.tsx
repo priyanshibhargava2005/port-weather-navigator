@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { api } from '@/lib/api';
 import { WeatherData, HistoricalWeather } from '@/lib/types';
@@ -17,7 +16,8 @@ export function useWeatherData(portId: string | null) {
       setError(null);
       
       try {
-        const weather = await api.getCurrentWeather(portId);
+        // Use the new getWeatherData method that uses the /weather endpoint
+        const weather = await api.getWeatherData(portId);
         setCurrentWeather(weather);
         
         const { weatherHistory } = await api.getHistoricalData(portId, 30);
@@ -35,7 +35,7 @@ export function useWeatherData(portId: string | null) {
     // Set up interval to refresh current weather every 5 minutes
     const intervalId = setInterval(() => {
       if (portId) {
-        api.getCurrentWeather(portId)
+        api.getWeatherData(portId)
           .then(weather => setCurrentWeather(weather))
           .catch(err => console.error('Error refreshing weather data:', err));
       }
