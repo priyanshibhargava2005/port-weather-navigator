@@ -99,7 +99,7 @@ const DelayPrediction = ({ portId }: DelayPredictionProps) => {
               <span>Delay Prediction</span>
             </CardTitle>
             {delayPrediction?.modelUsed && (
-              <CardDescription className="flex items-center text-xs">
+              <CardDescription className="flex items-center text-xs mt-1.5">
                 <Brain className="mr-1 h-3 w-3" />
                 AI Model: {delayPrediction.modelUsed}
               </CardDescription>

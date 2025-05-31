@@ -3,12 +3,11 @@ import { Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import PortSelector from '@/components/PortSelector';
-import Map from '@/components/Map';
 import WeatherPanel from '@/components/WeatherPanel';
 import DelayPrediction from '@/components/DelayPrediction';
 import CongestionAnalytics from '@/components/CongestionAnalytics';
 import Navbar from '@/components/Navbar';
-import { BarChart3, CalendarDays, Ship, ArrowRight } from 'lucide-react';
+import { CalendarDays, Ship, ArrowRight } from 'lucide-react';
 
 const Index = () => {
   const [selectedPortId, setSelectedPortId] = useState<string | null>(null);
@@ -32,44 +31,25 @@ const Index = () => {
           </div>
         </div>
         
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-          <div className="lg:col-span-2">
-            <Card>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+          <div>
+            <Card className="h-full">
               <CardContent className="p-4">
-                <Map selectedPortId={selectedPortId} onPortSelect={setSelectedPortId} />
+                <DelayPrediction portId={selectedPortId} />
               </CardContent>
             </Card>
           </div>
           
           <div>
-            <WeatherPanel portId={selectedPortId} />
+            <Card className="h-full">
+              <CardContent className="p-4">
+                <WeatherPanel portId={selectedPortId} />
+              </CardContent>
+            </Card>
           </div>
         </div>
         
-        <div className="mb-6">
-          <DelayPrediction portId={selectedPortId} />
-          {/* <CongestionAnalytics portId={selectedPortId} /> */}
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Link to="/analytics" className="block">
-            <Card className="h-full hover:shadow-md transition-shadow">
-              <CardContent className="p-6 flex flex-col items-center text-center">
-                <div className="bg-maritime-100 text-maritime-700 p-3 rounded-full mb-4">
-                  <BarChart3 className="h-6 w-6" />
-                </div>
-                <h3 className="font-bold mb-2">Weather Analytics</h3>
-                <p className="text-gray-500 text-sm mb-4">
-                  Analyze historical weather patterns and their impact on port operations
-                </p>
-                <Button variant="outline" className="mt-auto">
-                  <span>View Analytics</span>
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
-              </CardContent>
-            </Card>
-          </Link>
-          
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <Link to="/predictions" className="block">
             <Card className="h-full hover:shadow-md transition-shadow">
               <CardContent className="p-6 flex flex-col items-center text-center">
